@@ -1,79 +1,26 @@
-// src/routes/api.js
-// Mendaftarkan semua endpoint API DeepShield beserta middleware-nya.
-//
-// Daftar endpoint:
-//   GET    /api/health                → cek status server
-//   POST   /api/register             → daftar akun baru
-//   POST   /api/login                → login, return JWT
-//   POST   /api/scan-deepfake        → upload gambar, deteksi deepfake
-//   GET    /api/history              → riwayat scan milik user (wajib login)
-//   GET    /api/download-report/:id  → download laporan sebagai file JSON
-
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
 
-// ─── Controllers ──────────────────────────────────────────────────────────────
-const { loginUser, registerUser }      = require('../controllers/authController');
-const { scanDeepfake }                 = require('../controllers/predictController');
-const { downloadReport, getScanHistory } = require('../controllers/reportController');
+const auth = require('../controllers/authController');
+const predict = require('../controllers/predictController');
+const report = require('../controllers/reportController');
 
-// ─── Middleware ───────────────────────────────────────────────────────────────
 const { protect, optionalAuth } = require('../middleware/authMiddleware');
-const { handleUpload }          = require('../middleware/uploadMiddleware');
+const { handleUpload } = require('../middleware/uploadMiddleware');
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /api/health
-// Cek apakah server berjalan — tidak butuh auth
-// ─────────────────────────────────────────────────────────────────────────────
-router.get('/health', (req, res) => {
-  res.status(200).json({
-    success:   true,
-    message:   '🛡️ DeepShield Backend berjalan normal.',
-    timestamp: new Date().toISOString(),
-    version:   '1.0.0',
-  });
-});
+// --- DEBUGGING: Menampilkan isi controller di terminal ---
+console.log('DEBUG: authController =', auth);
+console.log('DEBUG: predictController =', predict);
+console.log('DEBUG: reportController =', report);
 
-// ─────────────────────────────────────────────────────────────────────────────
-// POST /api/register
-// Body JSON: { username, email, password }
-// Tidak butuh auth
-// ─────────────────────────────────────────────────────────────────────────────
-router.post('/register', registerUser);
+// Route
+router.get('/health', (req, res) => res.status(200).json({ success: true }));
 
-// ─────────────────────────────────────────────────────────────────────────────
-// POST /api/login
-// Body JSON: { identifier: "email_atau_username", password }
-// Tidak butuh auth — endpoint untuk mendapatkan token
-// ─────────────────────────────────────────────────────────────────────────────
-router.post('/login', loginUser);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// POST /api/scan-deepfake
-// Form-Data: key 'image', value: file gambar (JPG/PNG/WEBP, maks 10 MB)
-//
-// Urutan middleware:
-//   1. optionalAuth  → baca JWT jika ada (catat user_id), tapi TIDAK wajib
-//   2. handleUpload  → Multer memory storage, kunci field 'image'
-//   3. scanDeepfake  → forward ke FastAPI Crist, simpan ke MySQL
-// ─────────────────────────────────────────────────────────────────────────────
-router.post('/scan-deepfake', optionalAuth, handleUpload, scanDeepfake);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /api/history
-// Header: Authorization: Bearer <token>
-// Query params: ?page=1&limit=10
-// ─────────────────────────────────────────────────────────────────────────────
-router.get('/history', protect, getScanHistory);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /api/download-report/:id
-// Header: Authorization: Bearer <token>
-//
-// Urutan middleware:
-//   1. protect        → JWT WAJIB ada dan valid
-//   2. downloadReport → ambil dari MySQL, kirim sebagai file unduhan
-// ─────────────────────────────────────────────────────────────────────────────
-router.get('/download-report/:id', protect, downloadReport);
+// Memanggil fungsi dari objek yang diimpor
+router.post('/register', auth.registerUser);
+router.post('/login', auth.loginUser);
+router.post('/scan-deepfake', optionalAuth, handleUpload, predict.scanDeepfake);
+router.get('/history', protect, report.getScanHistory);
+router.get('/download-report/:id', protect, report.downloadReport);
 
 module.exports = router;
