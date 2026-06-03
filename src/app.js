@@ -17,28 +17,25 @@ const PORT = process.env.PORT || 3000;
 // ══════════════════════════════════════════════════════════════════════════════
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
-// Izinkan request dari Front-End React Mona.
-// Untuk production, ganti origin dengan URL spesifik: 'https://deepshield.app'
 app.use(cors({
-  origin:  process.env.NODE_ENV === 'production'
-             ? process.env.ALLOWED_ORIGIN || 'https://deepshield.app'
-             : '*',  // Development: izinkan semua origin
+  origin: function (origin, callback) {
+    // Daftar origin yang diizinkan (ambil dari env atau default)
+    // Kita buat daftar array agar mudah dikelola
+    const allowedOrigins = (process.env.ALLOWED_ORIGIN || 'http://localhost:5173,https://deepshield.app').split(',');
+    
+    // Izinkan request jika:
+    // 1. Tidak ada origin (misalnya request dari Postman/cURL)
+    // 2. Origin ada di dalam daftar yang diizinkan
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS Policy: Origin not allowed'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // Tambahkan ini jika kamu nanti menggunakan cookies/session
 }));
-
-// ─── JSON & URL-encoded Body Parser ──────────────────────────────────────────
-// Dibutuhkan untuk membaca req.body pada endpoint login
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// ─── Request Logger (hanya di development) ───────────────────────────────────
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req, _res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
-    next();
-  });
-}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ROUTES
