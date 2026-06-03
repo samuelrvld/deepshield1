@@ -9,23 +9,26 @@ const pool   = require('../config/db');
 // ─────────────────────────────────────────────────────────────────────────────
 const loginUser = async (req, res) => {
   try {
-    const { identifier, password } = req.body;
+    // Perbaikan: Mengambil 'identifier' ATAU 'email' dari req.body
+    // Jika Mona mengirim { "email": "..." }, maka userIdentifier akan mengambil nilai tersebut
+    const { identifier, email, password } = req.body;
+    const userIdentifier = identifier || email;
 
     // Validasi input
-    if (!identifier || !password) {
+    if (!userIdentifier || !password) {
       return res.status(400).json({
         success: false,
         message: 'Email/username dan password wajib diisi.',
       });
     }
 
-    // Cari user berdasarkan email ATAU username
+    // Cari user berdasarkan email ATAU username menggunakan userIdentifier
     const [rows] = await pool.query(
       `SELECT id, username, email, password, role
        FROM users
        WHERE email = ? OR username = ?
        LIMIT 1`,
-      [identifier, identifier]
+      [userIdentifier, userIdentifier]
     );
 
     if (rows.length === 0) {
@@ -75,7 +78,6 @@ const loginUser = async (req, res) => {
     });
   }
 };
-
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/register
 // Body: { username, email, password }
