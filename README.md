@@ -1,48 +1,55 @@
-DeepShield Backend API
-Dokumentasi ini memberikan panduan teknis mengenai struktur backend aplikasi DeepShield. Dokumentasi ini disusun untuk mempermudah proses integrasi antara backend dengan frontend.
+🛡️ DeepShield Backend
+Sistem deteksi deepfake berbasis AI — Capstone Project Coding Camp 2026 powered by DBS Foundation.
 
-🛠 Tech Stack
-Language: Node.js
+📋 Deskripsi Singkat Proyek
+DeepShield adalah aplikasi web yang mampu mendeteksi apakah sebuah gambar merupakan deepfake atau asli menggunakan model Machine Learning. Backend ini dibangun dengan Node.js/Express dan berkomunikasi dengan AI server berbasis FastAPI (Python/TensorFlow).
 
-Framework: Express.js
+⚙️ Petunjuk Setup Environment
+Prasyarat
 
-Database: MySQL (via mysql2/promise)
+Node.js v18+
+MySQL 8.0+ (XAMPP / Laragon / MySQL Workbench)
+AI Server FastAPI berjalan di port 8000
 
-Authentication: JSON Web Token (JWT)
+1. Clone repository
+bashgit clone https://github.com/samuelrvld/deepshield1.git
+cd deepshield1
+2. Install dependencies
+bashnpm install
+3. Setup environment variables
+bashcp .env.example .env
 
-AI Integration: Axios (untuk komunikasi dengan model FastAPI)
-
-
-🔑 Konfigurasi Environment
-Pastikan file .env telah dikonfigurasi pada root directory proyek dengan parameter berikut:
-Cuplikan kode
-PORT=3000
+Edit file .env sesuai konfigurasi lokal kamu:
+envPORT=3000
+NODE_ENV=development
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=
+DB_PASSWORD=isi_password_mysql_kamu
 DB_NAME=deepshield_db
-JWT_SECRET=ganti_dengan_secret_key_yang_aman
+JWT_SECRET=isi_dengan_string_panjang_dan_acak
+JWT_EXPIRES_IN=24h
 AI_SERVER_URL=http://localhost:8000
+ALLOWED_ORIGINS=http://localhost:5173
 
-Peringatan: Jangan pernah mengunggah file .env ke repositori publik (GitHub).
-📡 API EndpointsBerikut adalah daftar endpoint yang tersedia untuk dikonsumsi oleh 
-Method,Endpoint,Deskripsi,Headers
-POST,/api/auth/login,Autentikasi User,-
-POST,/api/scan,Upload & Deteksi Gambar,Authorization: Bearer <token>
-GET,/api/report/:id,Mengambil detail hasil scan,Authorization: Bearer <token>
+4. Inisialisasi database
+bashnpm run db:init
 
-🚀 Cara Menjalankan
-Untuk menjalankan lingkungan pengembangan (development), ikuti langkah berikut:
+Script ini otomatis membuat:
+Database deepshield_db
+Tabel users dan scan_results
+User demo: admin@deepshield.id / Admin123!
+5. Jalankan server
+bashnpm run dev    # Development (auto-reload)
+npm start      # Production
+Server berjalan di: http://localhost:3000
 
-Install Dependencies:
+🛠️ Tech Stack
 
-Bash
-npm install
-Database Setup:
-Pastikan database MySQL dengan nama deepshield_db telah dibuat sebelum menjalankan server.
-
-Start Server:
-
-Bash
-npm run dev
+Runtime: Node.js v18+
+Framework: Express.js
+Database: MySQL + mysql2/promise
+Auth: JWT (jsonwebtoken) + bcryptjs
+File Upload: Multer (memory storage)
+HTTP Client: Axios + form-data
+AI Integration: FastAPI (Python) di port 8000
